@@ -1,101 +1,180 @@
-import Image from "next/image";
+"use client"; // This tells Next.js to treat this component as a Client Component
+import { useState, useEffect } from "react";
+import { ref, onValue } from "firebase/database"; // Firebase imports
+import { database } from "./firebase"; // Adjust path as needed
+import { useRouter } from "next/navigation"; // For navigation in Next.js
 
-export default function Home() {
+export default function MovieList() {
+  const [movies, setMovies] = useState([]);
+  const [latestMovie, setLatestMovie] = useState(null); // For the banner section
+  const [searchTerm, setSearchTerm] = useState("");
+  const [genre, setGenre] = useState("All Genres");
+  const [country, setCountry] = useState("All Countries");
+  const [year, setYear] = useState("All Years");
+
+  const router = useRouter();
+
+  // Fetching data from Firebase
+  useEffect(() => {
+    const moviesRef = ref(database, "films");
+    onValue(moviesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const moviesArray = Object.values(data);
+        setMovies(moviesArray);
+
+        // Sort movies by UploadedAt and get the latest one for the banner section
+        const sortedMovies = moviesArray.sort(
+          (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
+        );
+        setLatestMovie(sortedMovies[0]); // Set the latest movie for the banner
+      }
+    });
+  }, []);
+
+  // Filter movies based on user input
+  const filteredMovies = movies
+    .filter(
+      (movie) =>
+        (genre === "All Genres" || movie.genres.includes(genre)) &&
+        (country === "All Countries" || movie.country === country) &&
+        (year === "All Years" || movie.year === year) &&
+        movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const yearDiff = b.year - a.year; // Sort by year (descending)
+      if (yearDiff !== 0) return yearDiff;
+      return a.title.localeCompare(b.title); // If years are the same, sort by title (ascending)
+    });
+
+  // Handle navigation to the movie detail page
+  const handleDetails = (title) => {
+    router.push(`/movies/${encodeURIComponent(title)}`); // Navigate to dynamic route
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+    <div className="max-w-screen-2xl mx-auto p-6">
+      {/* Navigation Bar */}
+      <nav className="flex justify-between items-center py-4">
+        <div className="flex items-center">
+          <img
+            src="https://placehold.co/40x40"
+            alt="Logo"
+            className="h-10 w-10"
+          />
+        </div>
+        <div className="flex space-x-6">
+          <a href="#" className="text-gray-300 hover:text-white">
+            Special
           </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
+          <a href="#" className="text-gray-300 hover:text-white">
+            Other
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="flex items-center space-x-3">
+          <input
+            type="text"
+            placeholder="Search by title..."
+            className="p-2 rounded bg-gray-800 text-gray-300 w-60"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <button className="bg-blue-600 text-white px-4 py-2 rounded">
+            Search
+          </button>
+        </div>
+      </nav>
+
+      {/* Filters Section */}
+      <div className="flex justify-center space-x-4 my-6">
+        <select
+          className="p-2 bg-gray-800 text-gray-300 rounded"
+          value={genre}
+          onChange={(e) => setGenre(e.target.value)}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <option>All Genres</option>
+          <option>Action</option>
+          <option>Comedy</option>
+          <option>Drama</option>
+        </select>
+        <select
+          className="p-2 bg-gray-800 text-gray-300 rounded"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <option>All Countries</option>
+          <option>USA</option>
+          <option>Canada</option>
+          <option>UK</option>
+        </select>
+        <select
+          className="p-2 bg-gray-800 text-gray-300 rounded"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+        >
+          <option>All Years</option>
+          <option>2024</option>
+          <option>2023</option>
+        </select>
+      </div>
+
+      {/* Main Banner Section */}
+      {/* {latestMovie && (
+        <div className="relative mb-10">
+          <img src={latestMovie.banner} alt="Banner" className="w-full rounded-lg" />
+          <div className="absolute inset-0 bg-black bg-opacity-40 p-6 flex flex-col justify-center">
+            <h2 className="text-3xl font-bold mb-4">{`"${latestMovie.title}"`}</h2>
+            <p className="text-gray-300 mb-4">{latestMovie.description}</p>
+            <button
+              className="bg-gray-800 text-white px-4 py-2 rounded"
+              onClick={() => handleDetails(latestMovie.title)}
+            >
+              Details
+            </button>
+          </div>
+          <div className="absolute top-1/2 right-4 transform -translate-y-1/2 space-y-4">
+            {filteredMovies.slice(0, 3).map((movie, index) => (
+              <img
+                key={index}
+                src={movie.poster}
+                alt={`Movie ${index}`}
+                className="rounded-lg shadow-lg"
+              />
+            ))}
+          </div>
+        </div>
+      )} */}
+
+      {/* Movie Listings Section */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        {filteredMovies.length > 0 ? (
+          filteredMovies.map((movie, index) => (
+            <div key={index} className="bg-gray-800 rounded-lg shadow-lg">
+              <img
+                src={movie.poster}
+                alt={movie.title}
+                className="rounded-t-lg"
+              />
+              <div className="p-4">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">{movie.year}</span>
+                  <span className="text-gray-400">{movie.rating}</span>
+                </div>
+                <h3 className="text-lg font-bold">{movie.title}</h3>
+                <p className="text-sm text-gray-400">{movie.genres}</p>
+                <button
+                  className="bg-blue-600 text-white mt-4 px-4 py-2 rounded w-full"
+                  onClick={() => handleDetails(movie.title)}
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-white">No movies available</p>
+        )}
+      </div>
     </div>
   );
 }
