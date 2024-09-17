@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ref, onValue } from "firebase/database"; // Firebase imports
 import { database } from "./firebase"; // Adjust path as needed
 import { useRouter } from "next/navigation"; // For navigation in Next.js
+import { FaStar, FaCalendarAlt } from "react-icons/fa"; // Import icons
 
 export default function MovieList() {
   const [movies, setMovies] = useState([]);
@@ -174,50 +175,67 @@ export default function MovieList() {
         </select>
       </div>
 
-      {/* Main Banner Section */}
-      {/* {latestMovie && (
-        <div className="relative mb-10">
-          <img src={latestMovie.banner} alt="Banner" className="w-full rounded-lg" />
-          <div className="absolute inset-0 bg-black bg-opacity-40 p-6 flex flex-col justify-center">
-            <h2 className="text-3xl font-bold mb-4">{`"${latestMovie.title}"`}</h2>
-            <p className="text-gray-300 mb-4">{latestMovie.description}</p>
-            <button
-              className="bg-gray-800 text-white px-4 py-2 rounded"
-              onClick={() => handleDetails(latestMovie.title)}
-            >
-              Details
-            </button>
-          </div>
-          <div className="absolute top-1/2 right-4 transform -translate-y-1/2 space-y-4">
-            {filteredMovies.slice(0, 3).map((movie, index) => (
-              <img
-                key={index}
-                src={movie.poster}
-                alt={`Movie ${index}`}
-                className="rounded-lg shadow-lg"
-              />
-            ))}
-          </div>
-        </div>
-      )} */}
-
       {/* Movie Listings Section */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: "repeat(auto-fill, 191.67px)", // Each card will be 191.67px wide
+          gap: "10px", // 10px gap between cards both horizontally and vertically
+        }}
+      >
         {filteredMovies.length > 0 ? (
           filteredMovies.map((movie, index) => (
-            <div key={index} className="bg-gray-800 rounded-lg shadow-lg">
+            <div
+              key={index}
+              className="bg-gray-800 rounded-lg shadow-lg p-2"
+              style={{
+                width: "191.67px", // Fixed width for the card
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              {/* Movie Poster */}
               <img
                 src={movie.poster}
                 alt={movie.title}
+                style={{
+                  width: "100%", // Full width of the card
+                  height: "250px", // Fixed height for the poster
+                  objectFit: "cover", // Keep aspect ratio, center the poster
+                }}
                 className="rounded-t-lg"
               />
-              <div className="p-4">
+
+              {/* Movie Details */}
+              <div className="p-2">
                 <div className="flex justify-between mb-2">
-                  <span className="text-gray-400">{movie.year}</span>
-                  <span className="text-gray-400">{movie.rating}</span>
+                  {/* Year with Calendar Icon */}
+                  <span className="text-gray-400 flex items-center">
+                    <FaCalendarAlt className="mr-1" />
+                    {movie.year}
+                  </span>
+
+                  {/* Rating with Star Icon */}
+                  <span className="text-gray-400 flex items-center">
+                    <FaStar className="mr-1" />
+                    {movie.rating}
+                  </span>
                 </div>
-                <h3 className="text-lg font-bold">{movie.title}</h3>
-                <p className="text-sm text-gray-400">{movie.genres}</p>
+
+                {/* Movie Title */}
+                <h3 className="text-lg font-bold truncate" title={movie.title}>
+                  {movie.title}
+                </h3>
+
+                {/* Movie Genres */}
+                <p className="text-sm text-gray-400 truncate">
+                  {Array.isArray(movie.genres)
+                    ? movie.genres.join(" / ") // Separate multiple genres with "/"
+                    : movie.genres}
+                </p>
+
+                {/* Details Button */}
                 <button
                   className="bg-blue-600 text-white mt-4 px-4 py-2 rounded w-full"
                   onClick={() => handleDetails(movie.title)}
