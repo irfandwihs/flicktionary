@@ -94,8 +94,26 @@ export default function MovieList() {
         >
           <option>All Genres</option>
           <option>Action</option>
+          <option>Adventure</option>
+          <option>Animation</option>
+          <option>Biography</option>
           <option>Comedy</option>
+          <option>Crime</option>
+          <option>Documentary</option>
           <option>Drama</option>
+          <option>Fantasy</option>
+          <option>History</option>
+          <option>Horror</option>
+          <option>Music</option>
+          <option>Musical</option>
+          <option>Mystery</option>
+          <option>Romance</option>
+          <option>Sci-Fi</option>
+          <option>Short</option>
+          <option>Sport</option>
+          <option>Thriller</option>
+          <option>War</option>
+          {/* <!-- Add more genres as needed --> */}
         </select>
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
@@ -104,8 +122,28 @@ export default function MovieList() {
         >
           <option>All Countries</option>
           <option>USA</option>
-          <option>Canada</option>
-          <option>UK</option>
+          <option>Cina</option>
+          <option>Denmark</option>
+          <option>Filipina</option>
+          <option>German</option>
+          <option>India</option>
+          <option>Indonesia</option>
+          <option>Inggris</option>
+          <option>Islandia</option>
+          <option>Irlandia</option>
+          <option>Japan</option>
+          <option>Kazakhstan</option>
+          <option>Korea</option>
+          <option>Mesir</option>
+          <option>Perancis</option>
+          <option>Rusia</option>
+          <option>Spanyol</option>
+          <option>Taiwan</option>
+          <option>Thailand</option>
+          <option>Tunisia</option>
+          <option>Ukraina</option>
+          <option>Vietnam</option>
+          {/* <!-- Add more countries as needed --> */}
         </select>
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
@@ -115,6 +153,24 @@ export default function MovieList() {
           <option>All Years</option>
           <option>2024</option>
           <option>2023</option>
+          <option>2022</option>
+          <option>2021</option>
+          <option>2020</option>
+          <option>2019</option>
+          <option>2018</option>
+          <option>2017</option>
+          <option>2016</option>
+          <option>2015</option>
+          <option>2014</option>
+          <option>2013</option>
+          <option>2012</option>
+          <option>2010</option>
+          <option>2009</option>
+          <option>2008</option>
+          <option>2007</option>
+          <option>2006</option>
+          <option>2005</option>
+          <option>2004</option>
         </select>
       </div>
 
