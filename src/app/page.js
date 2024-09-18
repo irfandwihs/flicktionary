@@ -240,8 +240,10 @@ export default function MovieList() {
       <style jsx>{`
         @media (max-width: 768px) {
           .grid {
-            display: flex;
-            flex-direction: column;
+            grid-template-columns: repeat(
+              2,
+              1fr
+            ); /* Display 2 columns on mobile */
           }
         }
       `}</style>
