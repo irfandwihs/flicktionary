@@ -1,18 +1,17 @@
 "use client"; // This tells Next.js to treat this component as a Client Component
 
 import { useState, useEffect } from "react";
+import { ref as dbRef, push, update } from "firebase/database"; // Firebase RTDB imports
 import {
-  ref,
-  push,
-  query,
-  orderByChild,
-  equalTo,
-  get,
-  update,
-} from "firebase/database"; // Firebase RTDB imports
-import { database } from "../firebase"; // Firebase config path
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage"; // Firebase Storage imports
+import { useSearchParams } from "next/navigation"; // Import useSearchParams
+import { database, storage } from "../firebase"; // Firebase config paths
 
 export default function AddMovie() {
+  const [movieId, setMovieId] = useState(null); // State to hold movie ID (for editing)
   const [title, setTitle] = useState("");
   const [year, setYear] = useState("");
   const [rating, setRating] = useState("");
@@ -21,31 +20,51 @@ export default function AddMovie() {
   const [embed, setEmbed] = useState(""); // This will store only the video ID
   const [synopsis, setSynopsis] = useState("");
   const [duration, setDuration] = useState("");
+  const [posterFile, setPosterFile] = useState(null); // Store the poster file to be uploaded
   const [posterURL, setPosterURL] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const searchParams = useSearchParams(); // Use Next.js hook to read query params
+
+  // Prefill the form with data from query params (if editing)
+  useEffect(() => {
+    const movieIdParam = searchParams.get("id");
+    const titleParam = searchParams.get("title");
+    const yearParam = searchParams.get("year");
+    const ratingParam = searchParams.get("rating");
+    const genresParam = searchParams.get("genres");
+    const countryParam = searchParams.get("country");
+    const embedParam = searchParams.get("embed");
+    const synopsisParam = searchParams.get("synopsis");
+    const durationParam = searchParams.get("duration");
+    const posterURLParam = searchParams.get("poster");
+
+    // If there's a movie ID, switch to "Update" mode and prefill form
+    if (movieIdParam) {
+      setMovieId(movieIdParam); // Set the movie ID to enter update mode
+      setTitle(titleParam || ""); // Prefill with existing values or default to an empty string
+      setYear(yearParam || "");
+      setRating(ratingParam || "");
+      setGenres(genresParam || "");
+      setCountry(countryParam || "");
+      setEmbed(embedParam || "");
+      setSynopsis(synopsisParam || "");
+      setDuration(durationParam || "");
+      setPosterURL(posterURLParam || "");
+    }
+  }, [searchParams]);
+
+  // Handle poster file selection
+  const handlePosterChange = (e) => {
+    const file = e.target.files[0];
+    setPosterFile(file); // Set the selected file
+  };
 
   // Function to handle embed URL change
   const handleEmbedChange = (e) => {
     const value = e.target.value;
     setEmbed(value);
   };
-
-  useEffect(() => {
-    if (title && year) {
-      const posterQuery = query(
-        ref(database, "films"),
-        orderByChild("title"),
-        equalTo(title)
-      );
-      get(posterQuery).then((snapshot) => {
-        snapshot.forEach((child) => {
-          if (child.val().year === year) {
-            setPosterURL(child.val().poster);
-          }
-        });
-      });
-    }
-  }, [title, year]);
 
   const handleSubmit = async () => {
     if (
@@ -63,7 +82,7 @@ export default function AddMovie() {
     }
 
     try {
-      // Prepare movie data
+      // Prepare movie data without the poster URL first
       const movieData = {
         title,
         year,
@@ -73,38 +92,50 @@ export default function AddMovie() {
         embed: `https://www.youtube.com/embed/${embed}`, // Prepend the YouTube embed base URL
         synopsis,
         duration,
-        poster: posterURL,
+        // We'll set the poster later if we upload one
       };
 
-      // Check if a movie with the same title and year already exists
-      const movieQuery = query(
-        ref(database, "films"),
-        orderByChild("title"),
-        equalTo(title)
-      );
-      const snapshot = await get(movieQuery);
-      let movieExists = false;
-      let movieId = null;
+      const moviesRef = dbRef(database, "films");
 
-      snapshot.forEach((child) => {
-        if (child.val().year === year) {
-          movieExists = true;
-          movieId = child.key; // Get the key of the existing movie
-        }
-      });
+      if (posterFile) {
+        // If a new poster is selected, upload it to Firebase Storage
+        const posterStorageRef = storageRef(
+          storage,
+          `posters/${posterFile.name}`
+        );
+        await uploadBytes(posterStorageRef, posterFile);
+        const downloadURL = await getDownloadURL(posterStorageRef);
 
-      const moviesRef = ref(database, "films");
+        // Add the poster URL to movie data
+        movieData.poster = downloadURL;
+      } else if (posterURL) {
+        // If no new poster is uploaded, retain the existing poster
+        movieData.poster = posterURL;
+      }
 
-      if (movieExists && movieId) {
-        // Update existing movie data
-        const movieRef = ref(database, `films/${movieId}`);
+      if (movieId) {
+        // If movieId exists, update the movie
+        const movieRef = dbRef(database, `films/${movieId}`);
         await update(movieRef, movieData);
         alert("Movie updated successfully!");
       } else {
-        // Add a new movie
+        // Add a new movie if no movieId
         await push(moviesRef, movieData);
         alert("Movie added successfully!");
       }
+
+      // Clear the form and state after submission
+      setTitle("");
+      setYear("");
+      setRating("");
+      setGenres("");
+      setCountry("");
+      setEmbed("");
+      setSynopsis("");
+      setDuration("");
+      setPosterFile(null); // Clear the file input
+      setPosterURL("");
+      setMovieId(null); // Reset movieId after update
 
       setErrorMessage("");
     } catch (error) {
@@ -114,7 +145,10 @@ export default function AddMovie() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Add Movie</h1>
+      <h1 className="text-3xl font-bold mb-4">
+        {movieId ? "Update Movie" : "Add Movie"}{" "}
+        {/* Change title based on mode */}
+      </h1>
 
       <input
         type="text"
@@ -182,15 +216,21 @@ export default function AddMovie() {
         onChange={(e) => setDuration(e.target.value)}
       />
 
+      {/* Poster Upload */}
+      <input type="file" accept="image/*" onChange={handlePosterChange} />
       {posterURL && <img src={posterURL} alt="Movie Poster" className="my-4" />}
 
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
 
       <button
         onClick={handleSubmit}
-        className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+        className={`${
+          movieId ? "bg-green-500" : "bg-blue-500"
+        } text-white py-2 px-4 rounded hover:${
+          movieId ? "bg-green-600" : "bg-blue-600"
+        }`}
       >
-        Add Movie
+        {movieId ? "Update Movie" : "Add Movie"} {/* Change button text */}
       </button>
     </div>
   );

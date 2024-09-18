@@ -122,7 +122,7 @@ export default function MovieList() {
           onChange={(e) => setCountry(e.target.value)}
         >
           <option>All Countries</option>
-          <option>USA</option>
+          <option>Afrika</option>
           <option>Cina</option>
           <option>Denmark</option>
           <option>Filipina</option>
@@ -143,6 +143,7 @@ export default function MovieList() {
           <option>Thailand</option>
           <option>Tunisia</option>
           <option>Ukraina</option>
+          <option>USA</option>
           <option>Vietnam</option>
           {/* <!-- Add more countries as needed --> */}
         </select>

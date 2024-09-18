@@ -128,8 +128,7 @@ export default function ExportMovies() {
             <th className="px-4 py-2">Genres</th>
             <th className="px-4 py-2">Rating</th>
             <th className="px-4 py-2">Synopsis</th>
-            <th className="px-4 py-2">Uploaded At</th>{" "}
-            {/* Change to Uploaded At */}
+            <th className="px-4 py-2">Uploaded At</th>
             <th className="px-4 py-2">Poster</th>
             <th className="px-4 py-2">Actions</th>
           </tr>
@@ -152,8 +151,7 @@ export default function ExportMovies() {
               </td>
               <td className="border px-4 py-2">{film.rating}</td>
               <td className="border px-4 py-2">{film.synopsis}</td>
-              <td className="border px-4 py-2">{film.uploadedAt}</td>{" "}
-              {/* Display uploadedAt timestamp */}
+              <td className="border px-4 py-2">{film.uploadedAt}</td>
               <td className="border px-4 py-2">
                 <img
                   src={film.poster}
@@ -163,9 +161,21 @@ export default function ExportMovies() {
               </td>
               <td className="border px-4 py-2">
                 <Link
-                  href={`/addfilm?title=${encodeURIComponent(
-                    film.title
-                  )}&year=${film.year}`}
+                  href={{
+                    pathname: "/addfilm", // Path to the update page
+                    query: {
+                      id: film.id,
+                      title: film.title,
+                      year: film.year,
+                      country: film.country,
+                      duration: film.duration,
+                      embed: film.embed,
+                      genres: film.genres.join(", "), // Join genres as a comma-separated string
+                      rating: film.rating,
+                      synopsis: film.synopsis,
+                      uploadedAt: film.uploadedAt,
+                    },
+                  }}
                 >
                   <button className="bg-green-500 text-white py-1 px-2 rounded mr-2">
                     Edit
