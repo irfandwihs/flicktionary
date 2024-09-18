@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ref, onValue } from "firebase/database"; // Firebase imports
 import { database } from "./firebase"; // Adjust path as needed
 import { useRouter } from "next/navigation"; // For navigation in Next.js
-import { FaStar, FaCalendarAlt } from "react-icons/fa"; // Import icons
+import { FaStar, FaCalendarAlt, FaArrowUp } from "react-icons/fa"; // Import icons
 
 export default function MovieList() {
   const [movies, setMovies] = useState([]);
@@ -12,8 +12,34 @@ export default function MovieList() {
   const [genre, setGenre] = useState("All Genres");
   const [country, setCountry] = useState("All Countries");
   const [year, setYear] = useState("All Years");
+  const [isVisible, setIsVisible] = useState(false); // Track button visibility
 
   const router = useRouter();
+
+  // Handle scroll event to show/hide the "Back to Top" button
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener("scroll", toggleVisibility);
+
+    return () => {
+      window.removeEventListener("scroll", toggleVisibility);
+    };
+  }, []);
+
+  // Function to scroll back to the top of the page
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   // Fetching data from Firebase
   useEffect(() => {
@@ -106,6 +132,7 @@ export default function MovieList() {
           <option>Sport</option>
           <option>Thriller</option>
           <option>War</option>
+          {/* Add more genres */}
         </select>
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
@@ -139,6 +166,7 @@ export default function MovieList() {
           <option>Ukraina</option>
           <option>USA</option>
           <option>Vietnam</option>
+          {/* Add more countries */}
         </select>
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
@@ -166,6 +194,7 @@ export default function MovieList() {
           <option>2006</option>
           <option>2005</option>
           <option>2004</option>
+          {/* Add more years */}
         </select>
       </div>
 
@@ -235,6 +264,17 @@ export default function MovieList() {
           <p className="text-white">No movies available</p>
         )}
       </div>
+
+      {/* Back to Top Button */}
+      {isVisible && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out
+                     md:bottom-8 md:right-8 md:p-4"
+        >
+          <FaArrowUp size={24} />
+        </button>
+      )}
 
       {/* Mobile View */}
       <style jsx>{`
