@@ -92,22 +92,25 @@ function AddMovieComponent() {
         embed: `https://www.youtube.com/embed/${embed}`, // Prepend the YouTube embed base URL
         synopsis,
         duration,
-        // We'll set the poster later if we upload one
+        uploadedAt: new Date().toISOString(), // Add uploadedAt timestamp
+        // Poster will be set later if we upload one
       };
 
       const moviesRef = dbRef(database, "films");
 
       if (posterFile) {
         // If a new poster is selected, upload it to Firebase Storage
+        const fileExtension = posterFile.type.split("/")[1];
         const posterStorageRef = storageRef(
           storage,
-          `posters/${posterFile.name}`
+          `posters/${title}-${year}.${fileExtension}`
         );
         await uploadBytes(posterStorageRef, posterFile);
         const downloadURL = await getDownloadURL(posterStorageRef);
 
         // Add the poster URL to movie data
         movieData.poster = downloadURL;
+        setPosterURL(downloadURL);
       } else if (posterURL) {
         // If no new poster is uploaded, retain the existing poster
         movieData.poster = posterURL;

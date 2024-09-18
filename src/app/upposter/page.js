@@ -1,4 +1,4 @@
-"use client"; // This tells Next.js to treat this component as a Client Component
+/* "use client"; // This tells Next.js to treat this component as a Client Component
 
 import { useState } from "react";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Firebase imports
@@ -94,3 +94,4 @@ export default function Upposter() {
     </div>
   );
 }
+ */
