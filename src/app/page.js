@@ -173,7 +173,7 @@ export default function MovieList() {
       <div
         className="grid gap-4"
         style={{
-          gridTemplateColumns: "repeat(auto-fill, minmax(191.67px, 1fr))", // Auto-fill for responsive grid
+          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", // Set smaller min size for mobile
         }}
       >
         {filteredMovies.length > 0 ? (
@@ -243,7 +243,8 @@ export default function MovieList() {
             grid-template-columns: repeat(
               2,
               1fr
-            ); /* Display 2 columns on mobile */
+            ); /* Ensure 2 columns on mobile */
+            gap: 8px; /* Reduce gap for smaller screens */
           }
         }
       `}</style>
