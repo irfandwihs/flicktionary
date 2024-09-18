@@ -64,14 +64,6 @@ export default function MovieList() {
             className="h-10 w-10"
           />
         </div>
-        <div className="flex space-x-6">
-          <a href="#" className="text-gray-300 hover:text-white">
-            Special
-          </a>
-          <a href="#" className="text-gray-300 hover:text-white">
-            Other
-          </a>
-        </div>
         <div className="flex items-center space-x-3">
           <input
             type="text"
@@ -114,7 +106,7 @@ export default function MovieList() {
           <option>Sport</option>
           <option>Thriller</option>
           <option>War</option>
-          {/* <!-- Add more genres as needed --> */}
+          {/* More genres */}
         </select>
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
@@ -130,14 +122,16 @@ export default function MovieList() {
           <option>India</option>
           <option>Indonesia</option>
           <option>Inggris</option>
-          <option>Islandia</option>
           <option>Irlandia</option>
+          <option>Islandia</option>
+          <option>Italia</option>
           <option>Japan</option>
           <option>Kazakhstan</option>
           <option>Korea</option>
           <option>Mesir</option>
           <option>Mexico</option>
           <option>Perancis</option>
+          <option>Polandia</option>
           <option>Rusia</option>
           <option>Spanyol</option>
           <option>Taiwan</option>
@@ -146,7 +140,7 @@ export default function MovieList() {
           <option>Ukraina</option>
           <option>USA</option>
           <option>Vietnam</option>
-          {/* <!-- Add more countries as needed --> */}
+          {/* More countries */}
         </select>
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
@@ -174,15 +168,15 @@ export default function MovieList() {
           <option>2006</option>
           <option>2005</option>
           <option>2004</option>
+          {/* More years */}
         </select>
       </div>
 
       {/* Movie Listings Section */}
       <div
-        className="grid"
+        className="grid gap-4"
         style={{
-          gridTemplateColumns: "repeat(auto-fill, 191.67px)", // Each card will be 191.67px wide
-          gap: "10px", // 10px gap between cards both horizontally and vertically
+          gridTemplateColumns: "repeat(auto-fill, minmax(191.67px, 1fr))", // Auto-fill for responsive grid
         }}
       >
         {filteredMovies.length > 0 ? (
@@ -191,7 +185,6 @@ export default function MovieList() {
               key={index}
               className="bg-gray-800 rounded-lg shadow-lg p-2"
               style={{
-                width: "191.67px", // Fixed width for the card
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
@@ -202,9 +195,9 @@ export default function MovieList() {
                 src={movie.poster}
                 alt={movie.title}
                 style={{
-                  width: "100%", // Full width of the card
-                  height: "250px", // Fixed height for the poster
-                  objectFit: "cover", // Keep aspect ratio, center the poster
+                  width: "100%",
+                  height: "250px",
+                  objectFit: "cover",
                 }}
                 className="rounded-t-lg"
               />
@@ -212,32 +205,26 @@ export default function MovieList() {
               {/* Movie Details */}
               <div className="p-2">
                 <div className="flex justify-between mb-2">
-                  {/* Year with Calendar Icon */}
                   <span className="text-gray-400 flex items-center">
                     <FaCalendarAlt className="mr-1" />
                     {movie.year}
                   </span>
-
-                  {/* Rating with Star Icon */}
                   <span className="text-gray-400 flex items-center">
                     <FaStar className="mr-1" />
                     {movie.rating}
                   </span>
                 </div>
 
-                {/* Movie Title */}
                 <h3 className="text-lg font-bold truncate" title={movie.title}>
                   {movie.title}
                 </h3>
 
-                {/* Movie Genres */}
                 <p className="text-sm text-gray-400 truncate">
                   {Array.isArray(movie.genres)
-                    ? movie.genres.join(" / ") // Separate multiple genres with "/"
+                    ? movie.genres.join(" / ")
                     : movie.genres}
                 </p>
 
-                {/* Details Button */}
                 <button
                   className="bg-blue-600 text-white mt-4 px-4 py-2 rounded w-full"
                   onClick={() => handleDetails(movie.title)}
