@@ -1,6 +1,6 @@
 "use client"; // This tells Next.js to treat this component as a Client Component
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { ref as dbRef, push, update } from "firebase/database"; // Firebase RTDB imports
 import {
   ref as storageRef,
@@ -10,7 +10,7 @@ import {
 import { useSearchParams } from "next/navigation"; // Import useSearchParams
 import { database, storage } from "../firebase"; // Firebase config paths
 
-export default function AddMovie() {
+function AddMovieComponent() {
   const [movieId, setMovieId] = useState(null); // State to hold movie ID (for editing)
   const [title, setTitle] = useState("");
   const [year, setYear] = useState("");
@@ -233,5 +233,14 @@ export default function AddMovie() {
         {movieId ? "Update Movie" : "Add Movie"} {/* Change button text */}
       </button>
     </div>
+  );
+}
+
+// Wrap the main component in Suspense for Next.js
+export default function AddMoviePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddMovieComponent />
+    </Suspense>
   );
 }
