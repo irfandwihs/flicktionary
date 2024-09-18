@@ -136,6 +136,7 @@ export default function MovieList() {
           <option>Kazakhstan</option>
           <option>Korea</option>
           <option>Mesir</option>
+          <option>Mexico</option>
           <option>Perancis</option>
           <option>Rusia</option>
           <option>Spanyol</option>
