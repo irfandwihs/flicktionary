@@ -106,7 +106,6 @@ export default function MovieList() {
           <option>Sport</option>
           <option>Thriller</option>
           <option>War</option>
-          {/* More genres */}
         </select>
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
@@ -140,7 +139,6 @@ export default function MovieList() {
           <option>Ukraina</option>
           <option>USA</option>
           <option>Vietnam</option>
-          {/* More countries */}
         </select>
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
@@ -168,7 +166,6 @@ export default function MovieList() {
           <option>2006</option>
           <option>2005</option>
           <option>2004</option>
-          {/* More years */}
         </select>
       </div>
 
@@ -238,6 +235,16 @@ export default function MovieList() {
           <p className="text-white">No movies available</p>
         )}
       </div>
+
+      {/* Mobile View */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .grid {
+            display: flex;
+            flex-direction: column;
+          }
+        }
+      `}</style>
     </div>
   );
 }
