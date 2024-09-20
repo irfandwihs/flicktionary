@@ -156,7 +156,9 @@ function AddMovieComponent() {
       <input
         type="text"
         placeholder="Movie Title"
-        className="border mb-2 p-2 w-full"
+        className={`border mb-2 p-2 w-full ${
+          title ? "text-black" : "text-gray-400"
+        }`}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
@@ -164,7 +166,9 @@ function AddMovieComponent() {
       <input
         type="text"
         placeholder="Year"
-        className="border mb-2 p-2 w-full"
+        className={`border mb-2 p-2 w-full ${
+          year ? "text-black" : "text-gray-400"
+        }`}
         value={year}
         onChange={(e) => setYear(e.target.value)}
       />
@@ -172,7 +176,9 @@ function AddMovieComponent() {
       <input
         type="text"
         placeholder="Rating"
-        className="border mb-2 p-2 w-full"
+        className={`border mb-2 p-2 w-full ${
+          rating ? "text-black" : "text-gray-400"
+        }`}
         value={rating}
         onChange={(e) => setRating(e.target.value)}
       />
@@ -180,7 +186,9 @@ function AddMovieComponent() {
       <input
         type="text"
         placeholder="Genres (comma-separated)"
-        className="border mb-2 p-2 w-full"
+        className={`border mb-2 p-2 w-full ${
+          genres ? "text-black" : "text-gray-400"
+        }`}
         value={genres}
         onChange={(e) => setGenres(e.target.value)}
       />
@@ -188,7 +196,9 @@ function AddMovieComponent() {
       <input
         type="text"
         placeholder="Country"
-        className="border mb-2 p-2 w-full"
+        className={`border mb-2 p-2 w-full ${
+          country ? "text-black" : "text-gray-400"
+        }`}
         value={country}
         onChange={(e) => setCountry(e.target.value)}
       />
@@ -198,7 +208,9 @@ function AddMovieComponent() {
         <input
           type="text"
           placeholder="Embed"
-          className="border mb-2 p-2 w-full"
+          className={`border mb-2 p-2 w-full ${
+            embed ? "text-black" : "text-gray-400"
+          }`}
           value={embed}
           onChange={handleEmbedChange}
         />
@@ -206,7 +218,9 @@ function AddMovieComponent() {
 
       <textarea
         placeholder="Synopsis"
-        className="border mb-2 p-2 w-full"
+        className={`border mb-2 p-2 w-full ${
+          synopsis ? "text-black" : "text-gray-400"
+        }`}
         value={synopsis}
         onChange={(e) => setSynopsis(e.target.value)}
       />
@@ -214,7 +228,9 @@ function AddMovieComponent() {
       <input
         type="text"
         placeholder="Duration"
-        className="border mb-2 p-2 w-full"
+        className={`border mb-2 p-2 w-full ${
+          duration ? "text-black" : "text-gray-400"
+        }`}
         value={duration}
         onChange={(e) => setDuration(e.target.value)}
       />

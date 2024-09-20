@@ -12,6 +12,7 @@ export default function MovieList() {
   const [genre, setGenre] = useState("All Genres");
   const [country, setCountry] = useState("All Countries");
   const [year, setYear] = useState("All Years");
+  const [yearCounts, setYearCounts] = useState({}); // Object to store the count of movies for each year
   const [isVisible, setIsVisible] = useState(false); // Track button visibility
 
   const router = useRouter();
@@ -55,6 +56,18 @@ export default function MovieList() {
           (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
         );
         setLatestMovie(sortedMovies[0]); // Set the latest movie for the banner
+
+        // Count movies by year
+        const yearCountMap = {};
+        moviesArray.forEach((movie) => {
+          const movieYear = movie.year;
+          if (yearCountMap[movieYear]) {
+            yearCountMap[movieYear] += 1;
+          } else {
+            yearCountMap[movieYear] = 1;
+          }
+        });
+        setYearCounts(yearCountMap); // Set the counts in the state
       }
     });
   }, []);
@@ -134,6 +147,23 @@ export default function MovieList() {
           <option>War</option>
           {/* Add more genres */}
         </select>
+
+        {/* Dynamic Year Filter with Movie Count */}
+        <select
+          className="p-2 bg-gray-800 text-gray-300 rounded"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+        >
+          <option value="All Years">All Years</option>
+          {Object.keys(yearCounts)
+            .sort((a, b) => b - a) // Sort years in descending order
+            .map((year) => (
+              <option key={year} value={year}>
+                {year} ({yearCounts[year]})
+              </option>
+            ))}
+        </select>
+
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
           value={country}
@@ -167,34 +197,6 @@ export default function MovieList() {
           <option>USA</option>
           <option>Vietnam</option>
           {/* Add more countries */}
-        </select>
-        <select
-          className="p-2 bg-gray-800 text-gray-300 rounded"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-        >
-          <option>All Years</option>
-          <option>2024</option>
-          <option>2023</option>
-          <option>2022</option>
-          <option>2021</option>
-          <option>2020</option>
-          <option>2019</option>
-          <option>2018</option>
-          <option>2017</option>
-          <option>2016</option>
-          <option>2015</option>
-          <option>2014</option>
-          <option>2013</option>
-          <option>2012</option>
-          <option>2010</option>
-          <option>2009</option>
-          <option>2008</option>
-          <option>2007</option>
-          <option>2006</option>
-          <option>2005</option>
-          <option>2004</option>
-          {/* Add more years */}
         </select>
       </div>
 
