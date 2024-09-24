@@ -13,6 +13,7 @@ export default function MovieList() {
   const [country, setCountry] = useState("All Countries");
   const [year, setYear] = useState("All Years");
   const [yearCounts, setYearCounts] = useState({}); // Object to store the count of movies for each year
+  const [countryCounts, setCountryCounts] = useState({}); // Object to store the count of movies for each country
   const [isVisible, setIsVisible] = useState(false); // Track button visibility
 
   const router = useRouter();
@@ -59,15 +60,27 @@ export default function MovieList() {
 
         // Count movies by year
         const yearCountMap = {};
+        const countryCountMap = {};
         moviesArray.forEach((movie) => {
           const movieYear = movie.year;
+          const movieCountry = movie.country;
+
+          // Count by year
           if (yearCountMap[movieYear]) {
             yearCountMap[movieYear] += 1;
           } else {
             yearCountMap[movieYear] = 1;
           }
+
+          // Count by country
+          if (countryCountMap[movieCountry]) {
+            countryCountMap[movieCountry] += 1;
+          } else {
+            countryCountMap[movieCountry] = 1;
+          }
         });
         setYearCounts(yearCountMap); // Set the counts in the state
+        setCountryCounts(countryCountMap); // Set the country counts in the state
       }
     });
   }, []);
@@ -145,7 +158,7 @@ export default function MovieList() {
           <option>Sport</option>
           <option>Thriller</option>
           <option>War</option>
-          {/* Add more genres */}
+          {/* Add more genres */} 
         </select>
 
         {/* Dynamic Year Filter with Movie Count */}
@@ -164,39 +177,20 @@ export default function MovieList() {
             ))}
         </select>
 
+        {/* Dynamic Country Filter with Movie Count */}
         <select
           className="p-2 bg-gray-800 text-gray-300 rounded"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
         >
-          <option>All Countries</option>
-          <option>Afrika</option>
-          <option>Cina</option>
-          <option>Denmark</option>
-          <option>Filipina</option>
-          <option>German</option>
-          <option>India</option>
-          <option>Indonesia</option>
-          <option>Inggris</option>
-          <option>Irlandia</option>
-          <option>Islandia</option>
-          <option>Italia</option>
-          <option>Japan</option>
-          <option>Kazakhstan</option>
-          <option>Korea</option>
-          <option>Mesir</option>
-          <option>Mexico</option>
-          <option>Perancis</option>
-          <option>Polandia</option>
-          <option>Rusia</option>
-          <option>Spanyol</option>
-          <option>Taiwan</option>
-          <option>Thailand</option>
-          <option>Tunisia</option>
-          <option>Ukraina</option>
-          <option>USA</option>
-          <option>Vietnam</option>
-          {/* Add more countries */}
+          <option value="All Countries">All Countries</option>
+          {Object.keys(countryCounts)
+            .sort()
+            .map((country) => (
+              <option key={country} value={country}>
+                {country} ({countryCounts[country]})
+              </option>
+            ))}
         </select>
       </div>
 
