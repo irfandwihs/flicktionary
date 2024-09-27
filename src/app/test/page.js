@@ -1,24 +1,162 @@
-"use client"; // This tells Next.js to treat this component as a Client Component
+"use client";
 import { useState, useEffect } from "react";
-import { ref, onValue } from "firebase/database"; // Firebase imports
-import { database } from "./firebase"; // Adjust path as needed
-import { useRouter } from "next/navigation"; // For navigation in Next.js
-import { FaStar, FaCalendarAlt, FaArrowUp } from "react-icons/fa"; // Import icons
+import { ref, get, query, limitToLast, onValue } from "firebase/database";
+import { database } from "../firebase"; // Adjust the path to your Firebase config
+import { useRouter } from "next/navigation";
+import { FaStar, FaCalendarAlt, FaArrowUp } from "react-icons/fa";
 
+// Carousel Banner Component
+function CarouselBanner() {
+  const [movies, setMovies] = useState([]);
+  const [currentDisplay, setCurrentDisplay] = useState({
+    currentSetIndex: 0,
+    currentPosterIndex: 0,
+  }); // Track both set and poster index in a single state object
+
+  // Fetch movies from Firebase
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const moviesRef = query(ref(database, "films"), limitToLast(6)); // Fetch the last 6 movies
+        const snapshot = await get(moviesRef);
+        if (snapshot.exists()) {
+          const moviesArray = [];
+          snapshot.forEach((childSnapshot) => {
+            const movieData = childSnapshot.val();
+            moviesArray.unshift({
+              id: childSnapshot.key,
+              title: movieData.title,
+              description: movieData.description,
+              poster: movieData.poster,
+              uploadedAt: movieData.uploadedAt,
+            });
+          });
+          setMovies(moviesArray);
+          /* console.log("Movies fetched:", moviesArray); */ // Debug: Log fetched movies
+        }
+      } catch (error) {
+        console.error("Error fetching movies:", error);
+      }
+    };
+
+    fetchMovies();
+  }, []);
+
+  // Rotate posters every 10 seconds and switch sets after 3 posters
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDisplay((prevState) => {
+        const { currentPosterIndex, currentSetIndex } = prevState;
+        const nextPosterIndex = currentPosterIndex + 1;
+
+        if (nextPosterIndex < 3) {
+          // Still within the same set, just increment poster index
+          return { ...prevState, currentPosterIndex: nextPosterIndex };
+        } else {
+          // After showing all 3 posters, reset poster index and switch to the next set
+          const nextSetIndex = (currentSetIndex + 1) % 2; // Toggle between 0 (Set 1) and 1 (Set 2)
+          /* console.log(`Switching to Set: ${nextSetIndex}`); */ // Debug: Log set switching
+          return { currentSetIndex: nextSetIndex, currentPosterIndex: 0 }; // Reset poster index and switch set
+        }
+      });
+    }, 10000); // Change poster every 10 seconds
+
+    return () => clearInterval(interval); // Clean up interval on component unmount
+  }, [movies]);
+
+  // Show loading state if no movies are available
+  if (movies.length === 0) {
+    return <div className="text-white text-center">Loading...</div>;
+  }
+
+  // Split movies into two sets of 3
+  const firstSet = movies.slice(0, 3); // First 3 movies (Set 1)
+  const secondSet = movies.slice(3, 6); // Next 3 movies (Set 2)
+
+  // Debug: Log to check grouping of movies
+  /* console.log("First set:", firstSet);
+  console.log("Second set:", secondSet); */
+
+  // Defensive: Ensure enough movies for both sets
+  if (secondSet.length < 3) {
+    console.error("Not enough movies in the database for the second set.");
+  }
+
+  // Get the current set of movies to display
+  const { currentSetIndex, currentPosterIndex } = currentDisplay;
+  const currentSet = currentSetIndex === 0 ? firstSet : secondSet;
+  const displayedMovie = currentSet[currentPosterIndex];
+
+  // Debug: Log current set and poster being displayed
+  /* console.log(`Displaying Set: ${currentSetIndex}, Poster Index: ${currentPosterIndex}`);
+    console.log("Current movie:", displayedMovie); */
+
+  // Defensive: Ensure a valid movie is available
+  if (!displayedMovie || !displayedMovie.poster) {
+    return (
+      <div className="text-white text-center">
+        No valid movie poster available.
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-[50vh] overflow-hidden">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+        style={{ backgroundImage: `url(${displayedMovie.poster})` }}
+      ></div>
+
+      {/* Poster Image Overlays */}
+      <div className="absolute top-36 right-8 flex space-x-8">
+        {currentSet.map((movie, index) => (
+          <div key={movie.id} className="w-40 h-60 relative">
+            {/* Poster Image */}
+            <img
+              src={movie.poster}
+              alt={movie.title}
+              className={`w-full h-full object-cover shadow-lg rounded-lg transition-transform duration-1000 ${
+                index === currentPosterIndex ? "scale-110" : "opacity-50"
+              }`}
+            />
+
+            {/* Movie Title Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 p-2 rounded-b-lg">
+              <p className="text-white text-center text-sm font-bold truncate">
+                {movie.title}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Movie Details and Synopsis Overlay */}
+      {displayedMovie && (
+        <div className="absolute bottom-0 left-0 w-full bg-black bg-opacity-60 p-4">
+          <h1 className="text-white text-4xl font-bold mb-2">
+            {displayedMovie.title}
+          </h1>
+          <p className="text-gray-300 text-lg">{displayedMovie.description}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Movie List Component
 export default function MovieList() {
   const [movies, setMovies] = useState([]);
-  const [latestMovie, setLatestMovie] = useState(null); // For the banner section
   const [searchTerm, setSearchTerm] = useState("");
   const [genre, setGenre] = useState("All Genres");
   const [country, setCountry] = useState("All Countries");
   const [year, setYear] = useState("All Years");
-  const [yearCounts, setYearCounts] = useState({}); // Object to store the count of movies for each year
-  const [countryCounts, setCountryCounts] = useState({}); // Object to store the count of movies for each country
-  const [isVisible, setIsVisible] = useState(false); // Track button visibility
+  const [yearCounts, setYearCounts] = useState({});
+  const [countryCounts, setCountryCounts] = useState({});
+  const [isVisible, setIsVisible] = useState(false);
 
   const router = useRouter();
 
-  // Handle scroll event to show/hide the "Back to Top" button
   useEffect(() => {
     const toggleVisibility = () => {
       if (window.pageYOffset > 300) {
@@ -35,7 +173,6 @@ export default function MovieList() {
     };
   }, []);
 
-  // Function to scroll back to the top of the page
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -43,7 +180,6 @@ export default function MovieList() {
     });
   };
 
-  // Fetching data from Firebase
   useEffect(() => {
     const moviesRef = ref(database, "films");
     onValue(moviesRef, (snapshot) => {
@@ -52,13 +188,6 @@ export default function MovieList() {
         const moviesArray = Object.values(data);
         setMovies(moviesArray);
 
-        // Sort movies by UploadedAt and get the latest one for the banner section
-        const sortedMovies = moviesArray.sort(
-          (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
-        );
-        setLatestMovie(sortedMovies[0]); // Set the latest movie for the banner
-
-        // Count movies by year
         const yearCountMap = {};
         const countryCountMap = {};
         moviesArray.forEach((movie) => {
@@ -79,8 +208,8 @@ export default function MovieList() {
             countryCountMap[movieCountry] = 1;
           }
         });
-        setYearCounts(yearCountMap); // Set the counts in the state
-        setCountryCounts(countryCountMap); // Set the country counts in the state
+        setYearCounts(yearCountMap);
+        setCountryCounts(countryCountMap);
       }
     });
   }, []);
@@ -100,14 +229,13 @@ export default function MovieList() {
       return a.title.localeCompare(b.title); // If years are the same, sort by title (ascending)
     });
 
-  // Handle navigation to the movie detail page
   const handleDetails = (title) => {
-    router.push(`/movies/${encodeURIComponent(title)}`); // Navigate to dynamic route
+    router.push(`/movies/${encodeURIComponent(title)}`);
   };
 
   return (
     <div className="max-w-screen-2xl mx-auto p-6">
-      {/* Navigation Bar */}
+      {/* Header and Banner */}
       <nav className="flex justify-between items-center py-4">
         <div className="flex items-center">
           <img
@@ -129,6 +257,9 @@ export default function MovieList() {
           </button>
         </div>
       </nav>
+
+      {/* Carousel Banner */}
+      <CarouselBanner />
 
       {/* Filters Section */}
       <div className="flex justify-center space-x-4 my-6">
@@ -262,29 +393,14 @@ export default function MovieList() {
         )}
       </div>
 
-      {/* Back to Top Button */}
       {isVisible && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out
-                     md:bottom-8 md:right-8 md:p-4"
+          className="fixed bottom-4 right-4 bg-blue-600 text-white p-3 rounded-full"
         >
-          <FaArrowUp size={24} />
+          <FaArrowUp />
         </button>
       )}
-
-      {/* Mobile View */}
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .grid {
-            grid-template-columns: repeat(
-              2,
-              1fr
-            ); /* Ensure 2 columns on mobile */
-            gap: 8px; /* Reduce gap for smaller screens */
-          }
-        }
-      `}</style>
     </div>
   );
 }
