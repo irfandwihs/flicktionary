@@ -1,24 +1,152 @@
-"use client"; // This tells Next.js to treat this component as a Client Component
+"use client";
 import { useState, useEffect } from "react";
-import { ref, onValue } from "firebase/database"; // Firebase imports
-import { database } from "./firebase"; // Adjust path as needed
-import { useRouter } from "next/navigation"; // For navigation in Next.js
-import { FaStar, FaCalendarAlt, FaArrowUp } from "react-icons/fa"; // Import icons
+import { ref, get, query, limitToLast, onValue } from "firebase/database";
+import { database } from "./firebase"; // Adjust the path to your Firebase config
+import { useRouter } from "next/navigation";
+import { FaStar, FaCalendarAlt, FaArrowUp } from "react-icons/fa";
+import "swiper/css"; // Import Swiper base styles
+import "swiper/css/navigation"; // Import navigation module styles
+import "swiper/css/pagination"; // Import pagination module styles
+import { Swiper, SwiperSlide } from "swiper/react"; // Import Swiper React components
+import { Navigation, Pagination, Autoplay } from "swiper/modules"; // Import Swiper modules including Autoplay
 
+function CarouselBanner() {
+  const [movies, setMovies] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const moviesRef = ref(database, "films");
+
+    const unsubscribe = onValue(moviesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const moviesArray = [];
+        snapshot.forEach((childSnapshot) => {
+          const movieData = childSnapshot.val();
+          moviesArray.unshift({
+            id: childSnapshot.key,
+            title: movieData.title,
+            rating: movieData.rating,
+            year: movieData.year,
+            poster: movieData.poster,
+          });
+        });
+        setMovies(moviesArray);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Update Swiper on window resize
+    const handleResize = () => {
+      if (window.innerWidth <= 640) {
+        document.querySelector(".swiper").swiper.update();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup the listener on unmount
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleDetailsClick = (title) => {
+    router.push(`/movies/${encodeURIComponent(title)}`);
+  };
+
+  return (
+    <div className="relative w-full h-auto">
+      <p className="text-white text-center font-semibold truncate">
+        Last Added Movie Title
+      </p>
+      <br />
+      <Swiper
+        modules={[Navigation, Pagination, Autoplay]}
+        spaceBetween={10}
+        slidesPerView={2}
+        loop={true}
+        loopAdditionalSlides={5} // Add extra slides for looping
+        autoplay={{
+          delay: 5000,
+          disableOnInteraction: false,
+        }}
+        breakpoints={{
+          320: {
+            slidesPerView: 1,
+            spaceBetween: 10,
+          },
+          480: {
+            slidesPerView: 2,
+            spaceBetween: 10,
+          },
+          640: {
+            slidesPerView: 3,
+            spaceBetween: 10,
+          },
+          768: {
+            slidesPerView: 4,
+            spaceBetween: 10,
+          },
+          1024: {
+            slidesPerView: 5,
+            spaceBetween: 15,
+          },
+          1280: {
+            slidesPerView: 6,
+            spaceBetween: 15,
+          },
+        }}
+        className="relative z-0"
+      >
+        {movies.map((movie) => (
+          <SwiperSlide key={movie.id}>
+            <div className="relative group h-[280px] w-[180px]">
+              <img
+                src={movie.poster}
+                alt={movie.title}
+                className="w-full h-full object-cover rounded-lg shadow-md"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 p-2 rounded-b-lg z-10">
+                <p className="text-white text-center font-semibold truncate">
+                  {movie.title} ({movie.year})
+                </p>
+                <button
+                  className="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white py-1 rounded text-xs z-20 relative"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDetailsClick(movie.title);
+                  }}
+                >
+                  Details
+                </button>
+              </div>
+              <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded z-20">
+                <span className="flex items-center">
+                  <FaStar className="mr-1" /> {movie.rating}
+                </span>
+              </div>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </div>
+  );
+}
+
+// Movie List Component
 export default function MovieList() {
   const [movies, setMovies] = useState([]);
-  const [latestMovie, setLatestMovie] = useState(null); // For the banner section
   const [searchTerm, setSearchTerm] = useState("");
   const [genre, setGenre] = useState("All Genres");
   const [country, setCountry] = useState("All Countries");
   const [year, setYear] = useState("All Years");
-  const [yearCounts, setYearCounts] = useState({}); // Object to store the count of movies for each year
-  const [countryCounts, setCountryCounts] = useState({}); // Object to store the count of movies for each country
-  const [isVisible, setIsVisible] = useState(false); // Track button visibility
+  const [yearCounts, setYearCounts] = useState({});
+  const [countryCounts, setCountryCounts] = useState({});
+  const [isVisible, setIsVisible] = useState(false);
 
   const router = useRouter();
 
-  // Handle scroll event to show/hide the "Back to Top" button
   useEffect(() => {
     const toggleVisibility = () => {
       if (window.pageYOffset > 300) {
@@ -35,7 +163,6 @@ export default function MovieList() {
     };
   }, []);
 
-  // Function to scroll back to the top of the page
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -43,7 +170,6 @@ export default function MovieList() {
     });
   };
 
-  // Fetching data from Firebase
   useEffect(() => {
     const moviesRef = ref(database, "films");
     onValue(moviesRef, (snapshot) => {
@@ -52,13 +178,6 @@ export default function MovieList() {
         const moviesArray = Object.values(data);
         setMovies(moviesArray);
 
-        // Sort movies by UploadedAt and get the latest one for the banner section
-        const sortedMovies = moviesArray.sort(
-          (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
-        );
-        setLatestMovie(sortedMovies[0]); // Set the latest movie for the banner
-
-        // Count movies by year
         const yearCountMap = {};
         const countryCountMap = {};
         moviesArray.forEach((movie) => {
@@ -79,8 +198,8 @@ export default function MovieList() {
             countryCountMap[movieCountry] = 1;
           }
         });
-        setYearCounts(yearCountMap); // Set the counts in the state
-        setCountryCounts(countryCountMap); // Set the country counts in the state
+        setYearCounts(yearCountMap);
+        setCountryCounts(countryCountMap);
       }
     });
   }, []);
@@ -100,14 +219,13 @@ export default function MovieList() {
       return a.title.localeCompare(b.title); // If years are the same, sort by title (ascending)
     });
 
-  // Handle navigation to the movie detail page
   const handleDetails = (title) => {
-    router.push(`/movies/${encodeURIComponent(title)}`); // Navigate to dynamic route
+    router.push(`/movies/${encodeURIComponent(title)}`);
   };
 
   return (
     <div className="max-w-screen-2xl mx-auto p-6">
-      {/* Navigation Bar */}
+      {/* Header and Banner */}
       <nav className="flex justify-between items-center py-4">
         <div className="flex items-center">
           <img
@@ -129,6 +247,9 @@ export default function MovieList() {
           </button>
         </div>
       </nav>
+
+      {/* Carousel Banner */}
+      <CarouselBanner />
 
       {/* Filters Section */}
       <div className="flex justify-center space-x-4 my-6">
@@ -262,29 +383,14 @@ export default function MovieList() {
         )}
       </div>
 
-      {/* Back to Top Button */}
       {isVisible && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out
-                     md:bottom-8 md:right-8 md:p-4"
+          className="fixed bottom-4 right-4 bg-blue-600 text-white p-3 rounded-full"
         >
-          <FaArrowUp size={24} />
+          <FaArrowUp />
         </button>
       )}
-
-      {/* Mobile View */}
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .grid {
-            grid-template-columns: repeat(
-              2,
-              1fr
-            ); /* Ensure 2 columns on mobile */
-            gap: 8px; /* Reduce gap for smaller screens */
-          }
-        }
-      `}</style>
     </div>
   );
 }
