@@ -3,7 +3,13 @@ import { useState, useEffect } from "react";
 import { ref, get, query, limitToLast, onValue } from "firebase/database";
 import { database } from "./firebase"; // Adjust the path to your Firebase config
 import { useRouter } from "next/navigation";
-import { FaStar, FaCalendarAlt, FaArrowUp } from "react-icons/fa";
+import {
+  FaStar,
+  FaCalendarAlt,
+  FaArrowUp,
+  FaSearch,
+  FaTimes,
+} from "react-icons/fa";
 import "swiper/css"; // Import Swiper base styles
 import "swiper/css/navigation"; // Import navigation module styles
 import "swiper/css/pagination"; // Import pagination module styles
@@ -14,6 +20,7 @@ function CarouselBanner() {
   const [movies, setMovies] = useState([]);
   const router = useRouter();
 
+  // Fetch movies from Firebase in real time
   useEffect(() => {
     const moviesRef = ref(database, "films");
 
@@ -30,25 +37,26 @@ function CarouselBanner() {
             poster: movieData.poster,
           });
         });
-        setMovies(moviesArray);
+        // Limit to the latest 12 movies
+        setMovies(moviesArray.slice(0, 12));
       }
     });
 
     return () => unsubscribe();
   }, []);
 
+  // Unlock autoplay on mobile after user interaction
   useEffect(() => {
-    // Update Swiper on window resize
-    const handleResize = () => {
-      if (window.innerWidth <= 640) {
-        document.querySelector(".swiper").swiper.update();
+    const enableAutoplay = () => {
+      const swiperInstance = document.querySelector(".swiper")?.swiper;
+      if (swiperInstance && swiperInstance.autoplay) {
+        swiperInstance.autoplay.start();
       }
     };
 
-    window.addEventListener("resize", handleResize);
+    enableAutoplay();
 
-    // Cleanup the listener on unmount
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {};
   }, []);
 
   const handleDetailsClick = (title) => {
@@ -57,43 +65,36 @@ function CarouselBanner() {
 
   return (
     <div className="relative w-full h-auto">
-      <p className="text-white text-center font-semibold truncate">
+      <p className="text-white text-center font-semibold truncate mb-4">
         Last Added Movie Title
       </p>
-      <br />
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         spaceBetween={10}
-        slidesPerView={2}
         loop={true}
-        loopAdditionalSlides={5} // Add extra slides for looping
         autoplay={{
           delay: 5000,
           disableOnInteraction: false,
         }}
         breakpoints={{
           320: {
-            slidesPerView: 1,
-            spaceBetween: 10,
+            slidesPerView: 2, // Show 2 slides on small screens (e.g., smartphones)
+            spaceBetween: 8,
           },
           480: {
-            slidesPerView: 2,
-            spaceBetween: 10,
+            slidesPerView: 3, // Show 3 slides on slightly larger screens
+            spaceBetween: 8,
           },
           640: {
-            slidesPerView: 3,
+            slidesPerView: 4, // Show 4 slides on medium screens
             spaceBetween: 10,
           },
           768: {
-            slidesPerView: 4,
-            spaceBetween: 10,
+            slidesPerView: 5, // Show 5 slides on tablets
+            spaceBetween: 12,
           },
           1024: {
-            slidesPerView: 5,
-            spaceBetween: 15,
-          },
-          1280: {
-            slidesPerView: 6,
+            slidesPerView: 6, // Show 6 slides on larger screens
             spaceBetween: 15,
           },
         }}
@@ -101,7 +102,7 @@ function CarouselBanner() {
       >
         {movies.map((movie) => (
           <SwiperSlide key={movie.id}>
-            <div className="relative group h-[280px] w-[180px]">
+            <div className="relative group h-[220px] w-[140px] sm:h-[280px] sm:w-[180px]">
               <img
                 src={movie.poster}
                 alt={movie.title}
@@ -144,7 +145,6 @@ export default function MovieList() {
   const [yearCounts, setYearCounts] = useState({});
   const [countryCounts, setCountryCounts] = useState({});
   const [isVisible, setIsVisible] = useState(false);
-
   const router = useRouter();
 
   useEffect(() => {
@@ -224,27 +224,35 @@ export default function MovieList() {
   };
 
   return (
-    <div className="max-w-screen-2xl mx-auto p-6">
-      {/* Header and Banner */}
-      <nav className="flex justify-between items-center py-4">
-        <div className="flex items-center">
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Header and Search Bar */}
+      <nav className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4">
+        <div className="flex items-center justify-center sm:justify-start">
           <img
             src="https://placehold.co/40x40"
             alt="Logo"
             className="h-10 w-10"
           />
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center bg-gray-100 rounded-lg shadow-sm px-4 py-2 mx-2 mt-2">
+          <FaSearch className="text-gray-500 mr-2" />
           <input
             type="text"
             placeholder="Search by title..."
-            className="p-2 rounded bg-gray-800 text-gray-300 w-60"
+            className={`bg-transparent outline-none ml-2 flex-grow ${
+              searchTerm ? "text-black" : "text-gray-700"
+            }`} // Change text color based on searchTerm
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">
-            Search
-          </button>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="text-gray-500 hover:text-gray-700 transition"
+            >
+              <FaTimes />
+            </button>
+          )}
         </div>
       </nav>
 
@@ -252,9 +260,9 @@ export default function MovieList() {
       <CarouselBanner />
 
       {/* Filters Section */}
-      <div className="flex justify-center space-x-4 my-6">
+      <div className="flex flex-col sm:flex-row sm:justify-center sm:space-x-4 my-6">
         <select
-          className="p-2 bg-gray-800 text-gray-300 rounded"
+          className="p-2 bg-gray-800 text-gray-300 rounded w-full sm:w-auto mb-4 sm:mb-0"
           value={genre}
           onChange={(e) => setGenre(e.target.value)}
         >
@@ -266,11 +274,13 @@ export default function MovieList() {
           <option>Comedy</option>
           <option>Crime</option>
           <option>Documentary</option>
+          <option>Doraemon</option>
           <option>Drama</option>
           <option>Fantasy</option>
           <option>Ghibli</option>
           <option>History</option>
           <option>Horror</option>
+          <option>Marvel</option>
           <option>Music</option>
           <option>Musical</option>
           <option>Mystery</option>
@@ -280,12 +290,11 @@ export default function MovieList() {
           <option>Sport</option>
           <option>Thriller</option>
           <option>War</option>
-          {/* Add more genres */}
+          {/* Add more genres as needed */}
         </select>
 
-        {/* Dynamic Year Filter with Movie Count */}
         <select
-          className="p-2 bg-gray-800 text-gray-300 rounded"
+          className="p-2 bg-gray-800 text-gray-300 rounded w-full sm:w-auto mb-4 sm:mb-0"
           value={year}
           onChange={(e) => setYear(e.target.value)}
         >
@@ -299,9 +308,8 @@ export default function MovieList() {
             ))}
         </select>
 
-        {/* Dynamic Country Filter with Movie Count */}
         <select
-          className="p-2 bg-gray-800 text-gray-300 rounded"
+          className="p-2 bg-gray-800 text-gray-300 rounded w-full sm:w-auto"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
         >
@@ -320,30 +328,22 @@ export default function MovieList() {
       <div
         className="grid gap-4"
         style={{
-          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", // Set smaller min size for mobile
+          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", // Responsive grid
         }}
       >
         {filteredMovies.length > 0 ? (
           filteredMovies.map((movie, index) => (
-            <div
-              key={index}
-              className="bg-gray-800 rounded-lg shadow-lg p-2"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
+            <div key={index} className="bg-gray-800 rounded-lg shadow-lg p-2">
               {/* Movie Poster */}
               <img
                 src={movie.poster}
                 alt={movie.title}
+                className="rounded-t-lg"
                 style={{
                   width: "100%",
-                  height: "250px",
+                  height: "200px",
                   objectFit: "cover",
                 }}
-                className="rounded-t-lg"
               />
 
               {/* Movie Details */}
@@ -379,7 +379,7 @@ export default function MovieList() {
             </div>
           ))
         ) : (
-          <p className="text-white">No movies available</p>
+          <p className="text-white text-center">No movies available</p>
         )}
       </div>
 

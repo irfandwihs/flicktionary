@@ -94,7 +94,7 @@ export default function MovieDetail() {
               alt="Logo"
               className="h-10 w-10"
             />
-            <h1 className="ml-3 text-xl font-bold">MovieGPT</h1>
+            <h1 className="ml-3 text-xl font-bold">Flicktionary</h1>
           </div>
           <div>
             <a href="/" className="text-gray-300 hover:text-white">
