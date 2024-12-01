@@ -90,7 +90,7 @@ export default function MovieDetail() {
         <nav className="flex justify-between items-center mb-6">
           <div className="flex items-center">
             <img
-              src="https://placehold.co/40x40"
+              src="https://firebasestorage.googleapis.com/v0/b/movie-fa458.appspot.com/o/posters%2Flogo1_11zon-removebg-preview-ezgif.com-jpg-to-webp-converter.webp?alt=media&token=baee99db-c025-4dcf-92ae-3e0378ef37be"
               alt="Logo"
               className="h-10 w-10"
             />

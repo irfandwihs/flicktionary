@@ -229,7 +229,7 @@ export default function MovieList() {
       <nav className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4">
         <div className="flex items-center justify-center sm:justify-start">
           <img
-            src="https://placehold.co/40x40"
+            src="https://firebasestorage.googleapis.com/v0/b/movie-fa458.appspot.com/o/posters%2Flogo1_11zon-removebg-preview-ezgif.com-jpg-to-webp-converter.webp?alt=media&token=baee99db-c025-4dcf-92ae-3e0378ef37be"
             alt="Logo"
             className="h-10 w-10"
           />
