@@ -50,6 +50,12 @@ export async function PUT(request, { params }) {
       updatedAt: new Date().toISOString()
     };
 
+    // Handle TMDB poster URL
+    const posterURL = formData.get('posterURL');
+    if (posterURL && !posterFile) {
+      filmData.poster = posterURL;
+    }
+
     // Handle poster upload if provided
     const posterFile = formData.get('poster');
     if (posterFile && posterFile.size > 0) {

@@ -520,6 +520,7 @@ export default function AddMoviePage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <AddMovieComponent />
+    }
     </Suspense>
   );
 }
