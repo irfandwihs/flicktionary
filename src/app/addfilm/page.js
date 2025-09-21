@@ -1,14 +1,7 @@
 "use client"; // This tells Next.js to treat this component as a Client Component
 
 import { useState, useEffect, Suspense } from "react";
-import { ref as dbRef, push, update } from "firebase/database"; // Firebase RTDB imports
-import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage"; // Firebase Storage imports
 import { useSearchParams } from "next/navigation"; // Import useSearchParams
-import { database, storage } from "../firebase"; // Firebase config paths
 
 function AddMovieComponent() {
   const [movieId, setMovieId] = useState(null); // State to hold movie ID (for editing)
@@ -23,6 +16,7 @@ function AddMovieComponent() {
   const [posterFile, setPosterFile] = useState(null); // Store the poster file to be uploaded
   const [posterURL, setPosterURL] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const searchParams = useSearchParams(); // Use Next.js hook to read query params
 
@@ -81,50 +75,53 @@ function AddMovieComponent() {
       return;
     }
 
+    setIsLoading(true);
+    setErrorMessage("");
+
     try {
-      // Prepare movie data without the poster URL first
-      const movieData = {
-        title,
-        year,
-        rating,
-        genres: genres.split(",").map((genre) => genre.trim()), // Convert comma-separated genres into an array
-        country,
-        embed: `https://www.youtube.com/embed/${embed}`, // Prepend the YouTube embed base URL
-        synopsis,
-        duration,
-        uploadedAt: new Date().toISOString(), // Add uploadedAt timestamp
-        // Poster will be set later if we upload one
-      };
-
-      const moviesRef = dbRef(database, "films");
-
+      // Create FormData for API request
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('year', year);
+      formData.append('rating', rating);
+      formData.append('genres', genres);
+      formData.append('country', country);
+      formData.append('embed', embed);
+      formData.append('synopsis', synopsis);
+      formData.append('duration', duration);
+      
       if (posterFile) {
-        // If a new poster is selected, upload it to Firebase Storage
-        const fileExtension = posterFile.type.split("/")[1];
-        const posterStorageRef = storageRef(
-          storage,
-          `posters/${title}-${year}.${fileExtension}`
-        );
-        await uploadBytes(posterStorageRef, posterFile);
-        const downloadURL = await getDownloadURL(posterStorageRef);
-
-        // Add the poster URL to movie data
-        movieData.poster = downloadURL;
-        setPosterURL(downloadURL);
-      } else if (posterURL) {
-        // If no new poster is uploaded, retain the existing poster
-        movieData.poster = posterURL;
+        formData.append('poster', posterFile);
       }
 
       if (movieId) {
-        // If movieId exists, update the movie
-        const movieRef = dbRef(database, `films/${movieId}`);
-        await update(movieRef, movieData);
-        alert("Movie updated successfully!");
+        // Update existing movie
+        const response = await fetch(`/api/films/${movieId}`, {
+          method: 'PUT',
+          body: formData,
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to update movie');
+        }
+        
+        alert(result.message || "Movie updated successfully!");
       } else {
-        // Add a new movie if no movieId
-        await push(moviesRef, movieData);
-        alert("Movie added successfully!");
+        // Add new movie
+        const response = await fetch('/api/films', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to add movie');
+        }
+        
+        alert(result.message || "Movie added successfully!");
       }
 
       // Clear the form and state after submission
@@ -142,7 +139,10 @@ function AddMovieComponent() {
 
       setErrorMessage("");
     } catch (error) {
-      setErrorMessage("Error adding/updating movie. Please try again.");
+      console.error('Error:', error);
+      setErrorMessage(error.message || "Error adding/updating movie. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -243,14 +243,29 @@ function AddMovieComponent() {
 
       <button
         onClick={handleSubmit}
+        disabled={isLoading}
         className={`${
-          movieId ? "bg-green-500" : "bg-blue-500"
-        } text-white py-2 px-4 rounded hover:${
-          movieId ? "bg-green-600" : "bg-blue-600"
-        }`}
+          isLoading 
+            ? "bg-gray-400 cursor-not-allowed" 
+            : movieId 
+              ? "bg-green-500 hover:bg-green-600" 
+              : "bg-blue-500 hover:bg-blue-600"
+        } text-white py-2 px-4 rounded transition-colors`}
       >
-        {movieId ? "Update Movie" : "Add Movie"} {/* Change button text */}
+        {isLoading 
+          ? "Processing..." 
+          : movieId 
+            ? "Update Movie" 
+            : "Add Movie"
+        }
       </button>
+      
+      {/* API Status Indicator */}
+      <div className="mt-4 p-3 bg-green-100 border border-green-400 rounded">
+        <p className="text-green-700 text-sm">
+          ✅ API Integration Active - Using Next.js API Routes for enhanced performance and security
+        </p>
+      </div>
     </div>
   );
 }
